@@ -18,30 +18,24 @@ jobs:
       - name: Create App with Mic Support
         run: |
           rm -rf android
-          flutter create . --platforms android --org com.raza.ayesha
+          # یہاں ہم نے جاوا (java) کو فکس کر دیا ہے
+          flutter create . --platforms android --org com.raza.ayesha -a java
           
-          # 1. پرمیشنز شامل کریں
-          sed -i '/<application/i \    <uses-permission android:name="android.permission.INTERNET"/>\n    <uses-permission android:name="android.permission.RECORD_AUDIO"/>\n    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS"/>\n    <uses-permission android:name="android.permission.CAMERA"/>' android/app/src/main/AndroidManifest.xml
-          
-          # 2. مائیک کے لیے ہارڈویئر فیچر آن کریں
-          sed -i '/<manifest/a \    <uses-feature android:name="android.hardware.microphone" android:required="false"/>' android/app/src/main/AndroidManifest.xml
+          # پرمیشنز شامل کرنا
+          sed -i '/<application/i \    <uses-permission android:name="android.permission.INTERNET"/>\n    <uses-permission android:name="android.permission.RECORD_AUDIO"/>\n    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS"/>' android/app/src/main/AndroidManifest.xml
 
-          # 3. جاوا کوڈ میں مائیک کا راستہ کھولیں (WebChromeClient Bridge)
-          # یہ وہ حصہ ہے جو ایپ کے اندر مائیک چلائے گا
+          # جاوا کوڈ میں مائیک کا راستہ کھولنا
           cat <<EOF > android/app/src/main/java/com/raza/ayesha/MainActivity.java
           package com.raza.ayesha;
           import io.flutter.embedding.android.FlutterActivity;
           import android.webkit.PermissionRequest;
           import android.webkit.WebChromeClient;
           import android.webkit.WebView;
-          import androidx.annotation.NonNull;
-          import io.flutter.embedding.engine.FlutterEngine;
 
           public class MainActivity extends FlutterActivity {
               @Override
               public void onFlutterUiDisplayed() {
                   super.onFlutterUiDisplayed();
-                  // سرور والی ویب سائٹ کو مائیک کی اجازت دینا
                   WebView webView = (WebView) getWindow().getDecorView().findViewById(android.R.id.content);
                   if(webView != null) {
                       webView.setWebChromeClient(new WebChromeClient() {
@@ -55,12 +49,12 @@ jobs:
           }
           EOF
 
-      - name: Build and Upload
+      - name: Build APK
         run: |
           flutter pub get
           flutter build apk --release
       - uses: actions/upload-artifact@v4
         with:
-          name: ayesha-fixed-mic-apk
+          name: ayesha-final-apk
           path: build/app/outputs/flutter-apk/app-release.apk
           
