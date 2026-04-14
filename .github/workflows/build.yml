@@ -18,19 +18,16 @@ jobs:
         with:
           channel: 'stable'
           
-      - name: Generate Android, Add All Major Permissions
+      - name: Generate Android with All Permissions
         run: |
           rm -rf android
           flutter create . --platforms android --org com.raza.ayesha
           
-          # یہ لائنیں انٹرنیٹ، مائیک، کیمرہ، کال اور کانٹیکٹس کی پرمیشن دیں گی
+          # یہ جادوئی لائنیں انٹرنیٹ اور مائیک کی پرمیشن سیٹ کریں گی
           sed -i '/<application/i \    <uses-permission android:name="android.permission.INTERNET"/>' android/app/src/main/AndroidManifest.xml
           sed -i '/<application/i \    <uses-permission android:name="android.permission.RECORD_AUDIO"/>' android/app/src/main/AndroidManifest.xml
-          sed -i '/<application/i \    <uses-permission android:name="android.permission.CAMERA"/>' android/app/src/main/AndroidManifest.xml
-          sed -i '/<application/i \    <uses-permission android:name="android.permission.CALL_PHONE"/>' android/app/src/main/AndroidManifest.xml
-          sed -i '/<application/i \    <uses-permission android:name="android.permission.READ_CONTACTS"/>' android/app/src/main/AndroidManifest.xml
           
-          # ایپ کا نام پروفیشنل (Ayesha AI) کرنے کے لیے
+          # ایپ کا نام بالکل صاف (Ayesha AI) کرنے کے لیے
           sed -i 's/android:label="[^"]*"/android:label="Ayesha AI"/g' android/app/src/main/AndroidManifest.xml
         
       - name: Install Dependencies
