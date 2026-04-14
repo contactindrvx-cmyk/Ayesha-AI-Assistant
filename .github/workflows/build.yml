@@ -7,7 +7,6 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       
-      # یہ جاوا سیٹ اپ ایپ کو بلڈ ہونے میں مدد دے گا
       - name: Setup Java
         uses: actions/setup-java@v3
         with:
@@ -19,8 +18,10 @@ jobs:
         with:
           channel: 'stable'
           
-      - name: Generate Android Files Automatically
-        run: flutter create . --platforms android --org com.raza.ayesha
+      - name: Clean Old Files and Generate New Android Folder
+        run: |
+          rm -rf android
+          flutter create . --platforms android --org com.raza.ayesha
         
       - name: Install Dependencies
         run: flutter pub get
