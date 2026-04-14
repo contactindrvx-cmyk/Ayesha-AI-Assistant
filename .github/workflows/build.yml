@@ -18,10 +18,13 @@ jobs:
         with:
           channel: 'stable'
           
-      - name: Clean Old Files and Generate New Android Folder
+      - name: Generate and Configure Android with Internet Permission
         run: |
           rm -rf android
           flutter create . --platforms android --org com.raza.ayesha
+          
+          # یہ جادوئی لائن اینڈرائڈ کو انٹرنیٹ استعمال کرنے کی اجازت دے گی
+          sed -i '/<application/i \    <uses-permission android:name="android.permission.INTERNET"/>' android/app/src/main/AndroidManifest.xml
         
       - name: Install Dependencies
         run: flutter pub get
