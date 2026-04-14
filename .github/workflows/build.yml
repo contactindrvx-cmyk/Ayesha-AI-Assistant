@@ -1,4 +1,4 @@
-name: Build Ayesha AI APK
+name: Build Ayesha AI Ultimate
 on: [push, workflow_dispatch]
 
 jobs:
@@ -6,39 +6,52 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
           java-version: '17'
-          
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
-          
-      - name: Generate Android with All Permissions
+      - name: Create Ultimate App
         run: |
           rm -rf android
           flutter create . --platforms android --org com.raza.ayesha
           
-          # یہ جادوئی لائنیں انٹرنیٹ اور مائیک کی پرمیشن سیٹ کریں گی
-          sed -i '/<application/i \    <uses-permission android:name="android.permission.INTERNET"/>' android/app/src/main/AndroidManifest.xml
-          sed -i '/<application/i \    <uses-permission android:name="android.permission.RECORD_AUDIO"/>' android/app/src/main/AndroidManifest.xml
-          
-          # ایپ کا نام بالکل صاف (Ayesha AI) کرنے کے لیے
-          sed -i 's/android:label="[^"]*"/android:label="Ayesha AI"/g' android/app/src/main/AndroidManifest.xml
-        
-      - name: Install Dependencies
-        run: flutter pub get
-        
-      - name: Build APK
-        run: flutter build apk --release
-        
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
+          # تمام ضروری پرمیشنز ایک ہی بار میں شامل کر دیں
+          cat <<EOF > android/app/src/main/AndroidManifest.xml
+          <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+              <uses-permission android:name="android.permission.INTERNET"/>
+              <uses-permission android:name="android.permission.RECORD_AUDIO"/>
+              <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS"/>
+              <uses-permission android:name="android.permission.CAMERA"/>
+              <uses-permission android:name="android.permission.CALL_PHONE"/>
+              <uses-permission android:name="android.permission.READ_CONTACTS"/>
+              <application
+                  android:label="Ayesha AI"
+                  android:icon="@mipmap/ic_launcher">
+                  <activity
+                      android:name=".MainActivity"
+                      android:exported="true"
+                      android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|screenLayout|density|uiMode"
+                      android:hardwareAccelerated="true"
+                      android:windowSoftInputMode="adjustResize">
+                      <intent-filter>
+                          <action android:name="android.intent.action.MAIN"/>
+                          <category android:name="android.intent.category.LAUNCHER"/>
+                      </intent-filter>
+                  </activity>
+              </application>
+          </manifest>
+          EOF
+      - name: Build and Upload
+        run: |
+          flutter pub get
+          flutter build apk --release
+      - uses: actions/upload-artifact@v4
         with:
-          name: ayesha-final-apk
+          name: ayesha-ultimate-apk
           path: build/app/outputs/flutter-apk/app-release.apk
           
