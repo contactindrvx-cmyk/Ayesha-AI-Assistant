@@ -1,4 +1,4 @@
-name: Build Ayesha AI Ultimate
+name: Build Ayesha AI Ultimate V2
 on: [push, workflow_dispatch]
 
 jobs:
@@ -15,27 +15,52 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
-      - name: Create Ultimate App
+      - name: Create App with Mic Support
         run: |
           rm -rf android
           flutter create . --platforms android --org com.raza.ayesha
           
-          # محفوظ طریقے سے تمام پرمیشنز کا اضافہ
-          sed -i '/<application/i \    <uses-permission android:name="android.permission.INTERNET"/>' android/app/src/main/AndroidManifest.xml
-          sed -i '/<application/i \    <uses-permission android:name="android.permission.RECORD_AUDIO"/>' android/app/src/main/AndroidManifest.xml
-          sed -i '/<application/i \    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS"/>' android/app/src/main/AndroidManifest.xml
-          sed -i '/<application/i \    <uses-permission android:name="android.permission.CAMERA"/>' android/app/src/main/AndroidManifest.xml
-          sed -i '/<application/i \    <uses-permission android:name="android.permission.CALL_PHONE"/>' android/app/src/main/AndroidManifest.xml
-          sed -i '/<application/i \    <uses-permission android:name="android.permission.READ_CONTACTS"/>' android/app/src/main/AndroidManifest.xml
+          # 1. پرمیشنز شامل کریں
+          sed -i '/<application/i \    <uses-permission android:name="android.permission.INTERNET"/>\n    <uses-permission android:name="android.permission.RECORD_AUDIO"/>\n    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS"/>\n    <uses-permission android:name="android.permission.CAMERA"/>' android/app/src/main/AndroidManifest.xml
           
-          # ایپ کا پروفیشنل نام
-          sed -i 's/android:label="[^"]*"/android:label="Ayesha AI"/g' android/app/src/main/AndroidManifest.xml
+          # 2. مائیک کے لیے ہارڈویئر فیچر آن کریں
+          sed -i '/<manifest/a \    <uses-feature android:name="android.hardware.microphone" android:required="false"/>' android/app/src/main/AndroidManifest.xml
+
+          # 3. جاوا کوڈ میں مائیک کا راستہ کھولیں (WebChromeClient Bridge)
+          # یہ وہ حصہ ہے جو ایپ کے اندر مائیک چلائے گا
+          cat <<EOF > android/app/src/main/java/com/raza/ayesha/MainActivity.java
+          package com.raza.ayesha;
+          import io.flutter.embedding.android.FlutterActivity;
+          import android.webkit.PermissionRequest;
+          import android.webkit.WebChromeClient;
+          import android.webkit.WebView;
+          import androidx.annotation.NonNull;
+          import io.flutter.embedding.engine.FlutterEngine;
+
+          public class MainActivity extends FlutterActivity {
+              @Override
+              public void onFlutterUiDisplayed() {
+                  super.onFlutterUiDisplayed();
+                  // سرور والی ویب سائٹ کو مائیک کی اجازت دینا
+                  WebView webView = (WebView) getWindow().getDecorView().findViewById(android.R.id.content);
+                  if(webView != null) {
+                      webView.setWebChromeClient(new WebChromeClient() {
+                          @Override
+                          public void onPermissionRequest(final PermissionRequest request) {
+                              request.grant(request.getResources());
+                          }
+                      });
+                  }
+              }
+          }
+          EOF
+
       - name: Build and Upload
         run: |
           flutter pub get
           flutter build apk --release
       - uses: actions/upload-artifact@v4
         with:
-          name: ayesha-ultimate-apk
+          name: ayesha-fixed-mic-apk
           path: build/app/outputs/flutter-apk/app-release.apk
           
